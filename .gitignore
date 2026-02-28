@@ -1,0 +1,6 @@
+musicapp/
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+.DS_Store
+features_30_sec.csv.zip
