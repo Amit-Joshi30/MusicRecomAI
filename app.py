@@ -5,13 +5,16 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+
 # ── Load Models ───────────────────────────────────────────────
 knn = pickle.load(open('knn_model.pkl', 'rb'))
 rf = pickle.load(open('rf_model.pkl', 'rb'))
 scaler = pickle.load(open('scaler.pkl', 'rb'))
 
+
 with open('feature_columns.json', 'r') as f:
     feature_columns = json.load(f)
+
 
 # ── Recreate Test Set ─────────────────────────────────────────
 df = pd.read_csv('features_30_sec.csv')
@@ -19,10 +22,12 @@ df.columns = df.columns.str.strip()
 X = df.drop(['filename', 'length', 'label'], axis=1)
 y = df['label']
 
+
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 X_test_scaled = scaler.transform(X_test)
+
 
 # ── Genre Emoji Map ───────────────────────────────────────────
 genre_emoji = {
@@ -30,6 +35,7 @@ genre_emoji = {
     'disco': '🕺', 'hiphop': '🎤', 'jazz': '🎷',
     'metal': '🤘', 'pop': '🎙️', 'reggae': '🌴', 'rock': '🎵'
 }
+
 
 genre_desc = {
     'blues': 'Soulful, expressive music with deep emotional roots',
@@ -44,6 +50,7 @@ genre_desc = {
     'rock': 'Guitar-driven, energetic and diverse sonic range'
 }
 
+
 # ── Page Config ───────────────────────────────────────────────
 st.set_page_config(
     page_title="Music Genre Classifier",
@@ -51,17 +58,19 @@ st.set_page_config(
     layout="wide"
 )
 
+
 # ── Header ────────────────────────────────────────────────────
 st.title("🎵 Music Genre Classification & Recommendation")
 st.markdown("##### AI-powered genre prediction using acoustic features — built with KNN & Random Forest")
 st.markdown("---")
+
 
 # ── Sidebar ───────────────────────────────────────────────────
 with st.sidebar:
     st.header("⚙️ Settings")
     model_choice = st.radio("Select Model:", ["KNN (Primary)", "Random Forest (Comparison)"])
     model = knn if model_choice == "KNN (Primary)" else rf
-    
+
     st.markdown("---")
     st.header("📊 Model Performance")
     if model_choice == "KNN (Primary)":
@@ -78,8 +87,10 @@ with st.sidebar:
     st.markdown("**Features:** 57 acoustic features")
     st.markdown("**Split:** 80% train / 20% test")
 
+
 # ── Mode Tabs ─────────────────────────────────────────────────
 tab1, tab2 = st.tabs(["🎧 Demo Mode — Test Songs", "📁 Upload Mode — Your CSV"])
+
 
 # ════════════════════════════════════════════════════════════════
 # TAB 1: DEMO MODE
@@ -137,15 +148,14 @@ with tab1:
         with col2:
             st.markdown("### 📊 Confidence")
             st.markdown(f"## {primary_conf:.1f}%")
-            # Confidence bar
             st.progress(int(primary_conf))
 
         with col3:
-            st.markdown("### 💡 You Might Also Like")
             if primary_conf == 100.0:
-                st.markdown("## 🎯 Unanimous")
-                st.caption("All 5 neighbors agreed — no secondary suggestion")
+                st.markdown("### 🎯 Unanimous Prediction")
+                st.caption("All 5 neighbors agreed — maximum confidence")
             else:
+                st.markdown("### 💡 You Might Also Like")
                 st.markdown(f"## {genre_emoji.get(second_genre, '🎵')} {second_genre.title()}")
                 st.caption(f"{second_conf:.1f}% secondary confidence")
 
@@ -171,6 +181,7 @@ with tab1:
             'Value': [round(raw_features[c], 4) for c in snap_cols]
         })
         st.dataframe(snap_df, use_container_width=True, hide_index=True)
+
 
 # ════════════════════════════════════════════════════════════════
 # TAB 2: UPLOAD MODE
@@ -218,7 +229,7 @@ with tab2:
                         st.metric("Confidence", f"{primary_conf:.1f}%")
                     with c3:
                         if primary_conf == 100.0:
-                            st.metric("You Might Also Like", "N/A (Unanimous)")
+                            st.metric("Unanimous Prediction", "All 5 neighbors agreed")
                         else:
                             st.metric("You Might Also Like",
                                       f"{genre_emoji.get(second_genre,'')} {second_genre.title()} ({second_conf:.1f}%)")
